@@ -37,6 +37,7 @@ class RedisProtocol(asyncio.Protocol):
             b"SPOP": self.spop,
             b"LRANGE": self.lrange,
             b"MSET": self.mset,
+            b"CONFIG": self.config,
         }
 
     def connection_made(self, transport: asyncio.transports.Transport):
@@ -201,6 +202,13 @@ class RedisProtocol(asyncio.Protocol):
             value = args[i + 1]
             self.dictionary[key] = value
         return b"+OK\r\n"
+
+    def config(self, cmd, *args):
+      if cmd == b'GET':
+        key, = args
+        res = b'no' if key == b'appendonly' else b''
+        return b"*2\r\n$%d\r\n%s\r\n$%d\r\n%s\r\n" % (len(key), key, len(res), res)
+      return b"*0\r\n"
 
 
 def main() -> int:
